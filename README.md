@@ -16,10 +16,10 @@ After using it for 2 weeks daily in the morning, I found it very useful and want
 ## The main plugin modal window
 I've marked the plugin and modal window with numbers in blue circles, so it's easier to follow along
 1. Unused Notes icon, that brings up the modal with the unused notes
-2. Opens 1 random note from the oldest 100 notes you have (and closes the modal window). There's also a hint on the left of the button what it does
-3. Grouping of the notes by day (Never used will transform into "2022-08-16" for example as a header for the note, and all the notes you last opened on that date will be shown under that header)
-4. Pressing/tapping the [X] on the left of the note will stop tracking it as unused and remove it from the list in the modal (for example, I have some images that I use in my notes. And while I want to review my notes, I don't want to review the images, so I mark them to be ignored for usage tracking. You can also enable tracking later from the context menu if you want)
-5. Pressing/tapping on the title of the note will open the note (and close the modal window)
+2. Opens 1 random note from the oldest 100 notes you have (this closes the modal window and opens the note. There's also a hint on the left of the button what it does)
+3. Grouping of the notes by day ("Never used" header will transform into "2022-08-16" header for the note for example, and all the notes you last opened on that date will be shown under that header)
+4. Pressing/tapping the [X] on the left of the note will stop tracking it as unused and remove it from the list in the modal (for example, I have some images that I use in my notes, but don't wanna review later, so I mark them to be ignored for usage tracking. You can also enable tracking later from the context menu if you want by the way)
+5. Pressing/tapping on the title of the note will open the note and close the modal window. The note won't be "Unused" anymore. But you can "Reset usage" from the file context menu, as described below
 
 ## The context menu
 ### Desktop
