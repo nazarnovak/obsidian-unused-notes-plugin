@@ -5,8 +5,8 @@ A plugin for Obsidian note-taking app, which makes it easier to track and review
 # Why
 My vault grew to 850 notes, and it was hard for me to:
 - Review all the notes I have easily, and know which notes are less often opened by me
-- Keep track if the information in my notes is relevant, and if I should updated or delete it
-- Link notes together when I go through them
+- Keep track if the information in my notes is relevant, or if I should update/delete it
+- Link notes together more easily when I go through them
 
 I searched for a simple tool like this, and couldn't find it, so I decided to build it  
 After using it for 2 weeks daily in the morning, I found it very useful and wanted to share it with others
