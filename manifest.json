@@ -1,0 +1,12 @@
+{
+  "id": "UnusedNotesTracker",
+  "name": "Unused Notes Tracker",
+  "version": "1.0.0",
+  "description": "Tracks unused notes more easily that you opened longer time ago.",
+  "author": "Nazar",
+  "isDesktopOnly": false,
+  "js": "main.js",
+  "dependencies": [],
+  "permissions": "ui",
+  "fundingUrl": "https://buymeacoffee.com/nazaro"
+}
