@@ -23,8 +23,19 @@ class UnusedNotesModal extends Modal {
   }
 
   randomFromInterval(min, max) {
+    // Get the weight of probability first
+    const weight = Math.random();
+
+    const weightedMax = Math.floor(max / 3) * 2;
+    const weightedMin = min + weightedMax;
+
+    // If probability is first 2/3rds - select first 2/3rds of the list
+    if (weight < 0.66) {
+      return Math.floor(Math.random() * (weightedMax - min) + min);
+    }
+
     // min included, max excluded
-    return Math.floor(Math.random() * (max - min) + min);
+    return Math.floor(Math.random() * (max - weightedMin) + weightedMin);
   }
 
   sortByDate(a, b) {
@@ -94,13 +105,15 @@ class UnusedNotesModal extends Modal {
         "Picks a random note from the list and opens it (this dialog will be closed)."
       )
       .addButton((cb) => {
-        cb.setButtonText("Open unused note");
+        cb.setButtonText("Open a random unused note");
         cb.setCta();
         cb.onClick(() => {
-          // If it's less than 100 notes - then use that amount to random from
-          const max = arrNotes.length > 100 ? 100 : arrNotes.length;
+          // randomFromInterval is weighted here. It's twice more likely to pick a note from first 2/3rds
+          const randomNoteIndex = this.randomFromInterval(0, arrNotes.length);
 
-          const randomNoteIndex = this.randomFromInterval(0, max);
+          // I want the oldest 2/3rds of the notes to be higher prio. If there are for example 5 unused notes that were
+          // never opened, and some that were opened on expiration time + 3 days - never should always have higher chance
+          // of being opened
 
           const randomUnusedFile = arrNotes[randomNoteIndex];
 
@@ -227,7 +240,7 @@ class UnusedNotesTrackerPlugin extends Plugin {
     this.saveData(this.pluginData);
   }
 
-  onload() {
+  onload = async () => {
     this.loadUnusedNotesData()
       .then((pluginData) => {
         this.addSettingTab(new UnusedNotesSettingsTab(this.app, this));
@@ -341,7 +354,7 @@ class UnusedNotesTrackerPlugin extends Plugin {
         );
       })
       .catch((err) => console.log("Oopsie happened:", err));
-  }
+  };
 
   loadUnusedNotesData() {
     if (this.pluginData.unusedNotes) {
