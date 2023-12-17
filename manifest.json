@@ -1,7 +1,7 @@
 {
   "id": "UnusedNotesTracker",
   "name": "Unused Notes Tracker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tracks unused notes more easily that you opened longer time ago.",
   "author": "Nazar Novak",
   "isDesktopOnly": false,
