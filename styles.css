@@ -1,0 +1,34 @@
+.unused-notes-modal {
+  padding: 5px;
+}
+
+.unused-heading {
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.unused-note-ignore {
+  margin-right: 5px;
+}
+
+.unused-note {
+  margin-bottom: 5px;
+  word-break: break-word;
+}
+
+/* 1170×2532 pixels at 460ppi */
+@media only screen and (width: 390px) and (height: 844px) and (-webkit-device-pixel-ratio: 3) {
+  .unused-note {
+    margin-bottom: 15px;
+    font-size: calc(1.5 * var(--font-ui-medium));
+  }
+}
+
+.unused-note a {
+  text-decoration: none;
+}
+
+.unused-note a:hover {
+  color: #faa;
+  text-decoration: underline;
+}

@@ -12,16 +12,6 @@ class UnusedNotesModal extends Modal {
     this.saveData = saveData;
   }
 
-  compareNotes(a, b) {
-    if (a.note < b.note) {
-      return -1;
-    }
-    if (a.note > b.note) {
-      return 1;
-    }
-    return 0;
-  }
-
   randomFromInterval(min, max) {
     // Get the weight of probability first
     const weight = Math.random();
@@ -38,14 +28,13 @@ class UnusedNotesModal extends Modal {
     return Math.floor(Math.random() * (max - weightedMin) + weightedMin);
   }
 
+  // Sort by access time + natural sorting for file names
   sortByDate(a, b) {
     if (a.lastAccessed === b.lastAccessed) {
-      if (a.filename < b.filename) {
-        return -1;
-      } else if (a.filename > b.filename) {
-        return 1;
-      }
-      return 0;
+      return a.filename.localeCompare(b.filename, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
     }
 
     if (!a.lastAccessed) {
@@ -71,7 +60,7 @@ class UnusedNotesModal extends Modal {
         continue;
       }
 
-      // No last access date - add it to array immediately
+      // No last access date - add it to array first
       if (!this.allNotes[key].lastAccessed) {
         arrNotes.push(this.allNotes[key]);
         continue;
@@ -117,7 +106,8 @@ class UnusedNotesModal extends Modal {
 
           const randomUnusedFile = arrNotes[randomNoteIndex];
 
-          new Notice("Unused notes left:" + arrNotes.length, 3000);
+          // No need for this anymore, since number of unused notes is always available in the dialog now
+          //     new Notice("Unused notes left:" + arrNotes.length, 3000);
           this.app.workspace.openLinkText(
             randomUnusedFile.filename,
             "",
@@ -130,6 +120,10 @@ class UnusedNotesModal extends Modal {
         });
       });
 
+    var info = contentEl.createEl("div");
+    info.classList.add("unused-notes-count");
+    info.setText("Total unused notes count: " + arrNotes.length);
+
     let headerText = "Never used";
     // If first note was never accessed - show that heading. Otherwise show the date
     if (arrNotes[0].lastAccessed) {
@@ -141,16 +135,22 @@ class UnusedNotesModal extends Modal {
     h1.classList.add("unused-heading");
     h1.setText(headerText);
 
-    let currentDate = 0;
+    let temporaryDate = "";
+    let previousDate = "";
+    let currentDate = "";
 
     for (const key in arrNotes) {
-      if (arrNotes[key].lastAccessed !== currentDate) {
-        let lastAccessedDate = new Date(Date.parse(arrNotes[key].lastAccessed));
-        currentDate = lastAccessedDate.toISOString().split("T")[0];
+      if (arrNotes[key].lastAccessed) {
+        temporaryDate = new Date(Date.parse(arrNotes[key].lastAccessed));
+        currentDate = temporaryDate.toISOString().split("T")[0];
 
-        var h1 = contentEl.createEl("h1");
-        h1.classList.add("unused-heading");
-        h1.setText(currentDate);
+        // So "Never accessed" notes are grouped together + change heading for every new unique date
+        if (currentDate !== previousDate) {
+          var h1 = contentEl.createEl("h1");
+          h1.classList.add("unused-heading");
+          previousDate = currentDate;
+          h1.setText(currentDate);
+        }
       }
 
       const noteDiv = contentEl.createDiv("unused-note");
@@ -303,7 +303,7 @@ class UnusedNotesTrackerPlugin extends Plugin {
               item.onClick(() => {
                 this.pluginData.unusedNotes[file.path] = {
                   ...this.pluginData.unusedNotes[file.path],
-                  lastAccessed: 0,
+                  lastAccessed: "",
                 };
                 this.saveData(this.pluginData);
               });
@@ -389,7 +389,7 @@ class UnusedNotesTrackerPlugin extends Plugin {
           unusedNotesData[key] = {
             filename: key,
             ignored: false,
-            lastAccessed: 0,
+            lastAccessed: "",
           };
         }
 
