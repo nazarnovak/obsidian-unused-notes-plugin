@@ -1,6 +1,16 @@
 A plugin for Obsidian note-taking app, which makes it easier to track and review unused notes in your vault
 <img width="709" alt="Screenshot 2023-10-30 at 13 04 31" src="https://github.com/nazarnovak/obsidian-unused-notes-plugin/assets/20066923/d9d22e2a-6060-4237-8cb7-1ac75878800a">
 
+# How to install
+1. Download the files in this repository to your computer
+2. Find your vault folder, and go to `.obsidian/plugins`
+3. You can create a `unused-notes-tracker` folder here
+4. Open the `unused-notes-tracker` folder, and paste the files into it
+5. Now when you go to Settings -> Community plugins, you'll see "Unused Notes Tracker" plugin, which you can enable
+
+If enough people are interested in this - I'm happy to publish it officially, since it takes a bit more work to do that and jump through all the hoops there, but for now I thought it would be great to see if people care about this at all, and if you have the interest to use it for a bit - maybe you find some bug I missed! :D
+Happy Obsidianing!
+
 
 # Why
 My vault grew to 850 notes, and it was hard for me to:
@@ -35,13 +45,3 @@ From the context menu you can choose to:
 ## Settings
 <img width="1008" alt="Screenshot 2023-10-30 at 13 12 14" src="https://github.com/nazarnovak/obsidian-unused-notes-plugin/assets/20066923/d70682a9-88e4-4fa6-ad95-249ae8047783">
 Here you can specify the number of days, when you consider a note "unused". For me, since I have 850 notes, I put 60 days, but I'll probably increase the number of days the more notes I have in my valut
-
-# How to install
-1. Download the files in this repository to your computer
-2. Find your vault folder, and go to `.obsidian/plugins`
-3. You can create a `unused-notes-tracker` folder here
-4. Open the `unused-notes-tracker` folder, and paste the files into it
-5. Now when you go to Settings -> Community plugins, you'll see "Unused Notes Tracker" plugin, which you can enable
-
-If enough people are interested in this - I'm happy to publish it officially, since it takes a bit more work to do that and jump through all the hoops there, but for now I thought it would be great to see if people care about this at all, and if you have the interest to use it for a bit - maybe you find some bug I missed! :D
-Happy Obsidianing!
