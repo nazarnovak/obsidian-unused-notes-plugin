@@ -7,6 +7,34 @@
   padding: 0;
 }
 
+.unused-notes-info-paragraph {
+  margin: 0;
+}
+
+.unused-notes-goals {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.unused-notes-goals-progress-container {
+  width: calc(50% - 10px);
+  padding-right: 10px;
+  height: 8px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  border-radius: 100px;
+  background-color: black;
+  border: 1px solid #f00;
+}
+
+.unused-notes-goals-progress-bar {
+  height: 100%;
+  border-radius: 100px;
+  background-color: #f00;
+}
+
 .unused-note-ignore {
   margin-right: 5px;
 }
@@ -18,6 +46,14 @@
 
 /* 1170×2532 pixels at 460ppi */
 @media only screen and (width: 390px) and (height: 844px) and (-webkit-device-pixel-ratio: 3) {
+  /* Override the default since it's terrible paddings... */
+  .modal-close-button {
+    font-size: 36px;
+    line-height: 36px;
+    height: 36px;
+    width: 36px;
+  }
+
   .unused-note {
     margin-bottom: 15px;
     font-size: calc(1.5 * var(--font-ui-medium));

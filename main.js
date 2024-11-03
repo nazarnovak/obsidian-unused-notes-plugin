@@ -48,45 +48,151 @@ class UnusedNotesModal extends Modal {
     return Date.parse(a.lastAccessed) - Date.parse(b.lastAccessed);
   }
 
+  // Sort by reversed access time + natural sorting for file names
+  sortByDateReversed(a, b) {
+    if (a.lastAccessed === b.lastAccessed) {
+      return a.filename.localeCompare(b.filename, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    }
+
+    if (!a.lastAccessed) {
+      return -1;
+    }
+
+    if (!b.lastAccessed) {
+      return 1;
+    }
+
+    return Date.parse(b.lastAccessed) - Date.parse(a.lastAccessed);
+  }
+
+  isToday(date) {
+    const today = new Date();
+
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  }
+
+  getAccessedToday(notes) {
+    let accessedToday = [];
+
+    for (const key in notes) {
+      if (this.allNotes[key].ignored) {
+        continue;
+      }
+
+      const lastAccessed = notes[key].lastAccessed === "" ? 0 : notes[key].lastAccessed;
+
+      const accessedDate = new Date(lastAccessed);
+
+      if (!this.isToday(accessedDate)) {
+        continue;
+      }
+
+      accessedToday.push(notes[key]);
+    }
+
+    return accessedToday;
+  }
+
+  isThisWeek(date) {
+    const today = new Date();
+
+    // Get the current day of the week (0 for Sunday, 6 for Saturday)
+    let dayOfWeek = today.getDay();
+
+    // Adjust dayOfWeek to make Monday the start of the week
+    // 0 (Sunday) should become 6, and all others should shift by -1
+    dayOfWeek = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+
+    // Calculate start and end of the week
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - dayOfWeek); // Set to the previous Monday
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // Set to the next Sunday (end of the week)
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // Adjust +2 hours for Sweden time
+    date.setHours(date.getHours() + 2);
+
+    // Check if the date is within this range
+    return date >= startOfWeek && date <= endOfWeek;
+  }
+
+  getAccessedThisWeek(notes) {
+    let accessedThisWeek = [];
+
+    for (const key in notes) {
+      if (this.allNotes[key].ignored) {
+        continue;
+      }
+
+      const lastAccessed = notes[key].lastAccessed === "" ? 0 : notes[key].lastAccessed;
+
+      const accessedDate = new Date(lastAccessed);
+
+      if (!this.isThisWeek(accessedDate)) {
+        continue;
+      }
+
+      accessedThisWeek.push(notes[key]);
+    }
+
+    return accessedThisWeek;
+  }
+
   onOpen() {
     let { contentEl } = this;
     contentEl.empty();
     contentEl.classList.add("unused-notes-modal");
 
-    let arrNotes = [];
+    let accessedToday = this.getAccessedToday(this.allNotes);
+    let accessedThisWeek = this.getAccessedThisWeek(this.allNotes);
+
+    let reviewNeededNotes = [];
+    let reviewedNotes = [];
+
     let now = Date.now();
     for (const key in this.allNotes) {
+      // Note is ignored - we don't want to keep track of it
       if (this.allNotes[key].ignored) {
         continue;
       }
 
       // No last access date - add it to array first
       if (!this.allNotes[key].lastAccessed) {
-        arrNotes.push(this.allNotes[key]);
+        reviewNeededNotes.push(this.allNotes[key]);
         continue;
       }
 
-      let lastAccessedDate = Date.parse(this.allNotes[key].lastAccessed);
-      let timeDiff = now - lastAccessedDate;
-      let daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+      let noteAccessedDate = Date.parse(this.allNotes[key].lastAccessed);
+      let noteAccessedTimeAgo = now - noteAccessedDate;
+      let noteAccessedDaysAgo = noteAccessedTimeAgo / (1000 * 60 * 60 * 24);
+      // If we reviewed this note within the UNUSED_DAYS_LIMIT - skip it and don't review it
       if (
-        this.allNotes[key].ignored ||
-        daysDiff <= this.settings.UNUSED_DAYS_LIMIT
+        noteAccessedDaysAgo <= this.settings.UNUSED_DAYS_LIMIT
       ) {
+        reviewedNotes.push(this.allNotes[key]);
         continue;
       }
 
-      arrNotes.push(this.allNotes[key]);
+      reviewNeededNotes.push(this.allNotes[key]);
     }
 
-    if (!arrNotes.length) {
+    if (!reviewNeededNotes.length) {
       var h1 = contentEl.createEl("h1");
       h1.classList.add("unused-heading");
       h1.setText("All notes are used :)");
       return;
     }
 
-    arrNotes.sort(this.sortByDate);
+    reviewNeededNotes.sort(this.sortByDate);
+    reviewedNotes.sort(this.sortByDateReversed);
 
     new import_obsidian8.Setting(contentEl)
       .setName("Open a random unused note from list below")
@@ -98,16 +204,16 @@ class UnusedNotesModal extends Modal {
         cb.setCta();
         cb.onClick(() => {
           // randomFromInterval is weighted here. It's twice more likely to pick a note from first 2/3rds
-          const randomNoteIndex = this.randomFromInterval(0, arrNotes.length);
+          const randomNoteIndex = this.randomFromInterval(0, reviewNeededNotes.length);
 
           // I want the oldest 2/3rds of the notes to be higher prio. If there are for example 5 unused notes that were
           // never opened, and some that were opened on expiration time + 3 days - never should always have higher chance
           // of being opened
 
-          const randomUnusedFile = arrNotes[randomNoteIndex];
+          const randomUnusedFile = reviewNeededNotes[randomNoteIndex];
 
           // No need for this anymore, since number of unused notes is always available in the dialog now
-          //     new Notice("Unused notes left:" + arrNotes.length, 3000);
+          //     new Notice("Unused notes left:" + reviewNeededNotes.length, 3000);
           this.app.workspace.openLinkText(
             randomUnusedFile.filename,
             "",
@@ -122,12 +228,77 @@ class UnusedNotesModal extends Modal {
 
     var info = contentEl.createEl("div");
     info.classList.add("unused-notes-count");
-    info.setText("Total unused notes count: " + arrNotes.length);
 
+    let totalP = contentEl.createEl("p");
+    totalP.classList.add("unused-notes-info-paragraph");
+    const totalPText = "Total unused notes count: " + reviewNeededNotes.length;
+    totalP.setText(totalPText);
+    info.appendChild(totalP);
+
+    var goalsProgressBarsDiv = contentEl.createEl("div");
+    goalsProgressBarsDiv.classList.add("unused-notes-goals");
+
+    let reviewGoalP = contentEl.createEl("p");
+    reviewGoalP.classList.add("unused-notes-info-paragraph");
+    const reviewGoalText = "Review goals [need>done]. Weekly: " + this.settings.WEEKLY_REVIEW_COUNT 
+      + ">" + Object.values(accessedThisWeek).length + ". Daily: " 
+      + Math.ceil(this.settings.WEEKLY_REVIEW_COUNT / 7) + ">" + Object.values(accessedToday).length;
+    reviewGoalP.setText(reviewGoalText);
+    info.appendChild(reviewGoalP);
+
+    // Visual progress bars for better visualization
+    let progressContainer1 = contentEl.createEl("div");
+    progressContainer1.classList.add("unused-notes-goals-progress-container");
+
+    let progressBar1 = contentEl.createEl("div");
+    progressBar1.classList.add("unused-notes-goals-progress-bar");
+    progressBar1.style.cssText = "width: " + Object.values(accessedThisWeek).length / this.settings.WEEKLY_REVIEW_COUNT * 100 + "%";
+
+    let progressContainer2 = contentEl.createEl("div");
+    progressContainer2.classList.add("unused-notes-goals-progress-container");
+
+    let progressBar2 = contentEl.createEl("div");
+    progressBar2.classList.add("unused-notes-goals-progress-bar");
+    progressBar2.style.cssText = "width: " + Object.values(accessedToday).length / Math.ceil(this.settings.WEEKLY_REVIEW_COUNT / 7) * 100 + "%";
+
+    progressContainer1.appendChild(progressBar1);
+    progressContainer2.appendChild(progressBar2);
+    goalsProgressBarsDiv.appendChild(progressContainer1);
+    goalsProgressBarsDiv.appendChild(progressContainer2);
+    info.appendChild(goalsProgressBarsDiv);
+
+    // Show last 10 reviewed notes dropdown (so it doesn't take a lot of space)
+    let reviewedList = contentEl.createEl("p");
+    reviewedList.classList.add("unused-notes-info-paragraph");
+    const reviewListText = "Recently reviewed notes list";
+    reviewedList.setText(reviewListText);
+
+    // Create the <select> element
+    const select = document.createElement("select");
+    // Loop through the array to create <option> elements
+    reviewedNotes.slice(0, 10).forEach((item, index) => {
+      const option = document.createElement("option");
+      option.textContent = item.filename + " - " + item.lastAccessed;
+      option.disabled = true;  // Disable each <option>
+
+      // Set the first option as selected
+      if (index === 0) {
+        option.selected = true;
+      }
+
+      // Append the <option> to the <select>
+      select.appendChild(option);
+    });
+
+    // Append the <select> to the document (e.g., body or another container)
+    info.appendChild(reviewedList);
+    info.appendChild(select);
+
+    // Show a list of notes with links that needs reviewing
     let headerText = "Never used";
     // If first note was never accessed - show that heading. Otherwise show the date
-    if (arrNotes[0].lastAccessed) {
-      let lastAccessedDate = new Date(Date.parse(note.lastAccessed));
+    if (reviewNeededNotes[0].lastAccessed) {
+      let lastAccessedDate = new Date(Date.parse(reviewNeededNotes[0].lastAccessed));
       headerText = lastAccessedDate.toISOString().split("T")[0];
     }
 
@@ -139,9 +310,9 @@ class UnusedNotesModal extends Modal {
     let previousDate = "";
     let currentDate = "";
 
-    for (const key in arrNotes) {
-      if (arrNotes[key].lastAccessed) {
-        temporaryDate = new Date(Date.parse(arrNotes[key].lastAccessed));
+    for (const key in reviewNeededNotes) {
+      if (reviewNeededNotes[key].lastAccessed) {
+        temporaryDate = new Date(Date.parse(reviewNeededNotes[key].lastAccessed));
         currentDate = temporaryDate.toISOString().split("T")[0];
 
         // So "Never accessed" notes are grouped together + change heading for every new unique date
@@ -163,15 +334,15 @@ class UnusedNotesModal extends Modal {
       ignoreLink.classList.add("unused-note-ignore");
       ignoreLink.href = "javascript:void(0);"; // Set a dummy href
       ignoreLink.addEventListener("click", () => {
-        if (!this.allNotes[arrNotes[key].filename]) {
+        if (!this.allNotes[reviewNeededNotes[key].filename]) {
           console.log(
             "Failed to find a note with path:",
-            arrNotes[key].filename
+            reviewNeededNotes[key].filename
           );
           return;
         }
 
-        this.allNotes[arrNotes[key].filename].ignored = true;
+        this.allNotes[reviewNeededNotes[key].filename].ignored = true;
         this.saveData(this.allNotes);
 
         var elem = document.getElementById("never-" + key);
@@ -179,10 +350,10 @@ class UnusedNotesModal extends Modal {
       });
 
       const noteLink = document.createElement("a");
-      noteLink.setText(`${arrNotes[key].filename}`);
+      noteLink.setText(`${reviewNeededNotes[key].filename}`);
       noteLink.href = "javascript:void(0);"; // Set a dummy href
       noteLink.addEventListener("click", () => {
-        this.app.workspace.openLinkText(arrNotes[key].filename, "", "tab", {
+        this.app.workspace.openLinkText(reviewNeededNotes[key].filename, "", "tab", {
           active: true,
         });
         this.close();
@@ -223,6 +394,19 @@ class UnusedNotesSettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+      new Setting(containerEl)
+      .setName("Weekly review notes amount")
+      .setDesc(
+        "Specify how many notes per week you want to review"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder(this.plugin.pluginData.settings.WEEKLY_REVIEW_COUNT)
+          .onChange(async (value) => {
+            this.plugin.pluginData.settings.WEEKLY_REVIEW_COUNT = value;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }
 
@@ -247,7 +431,12 @@ class UnusedNotesTrackerPlugin extends Plugin {
 
         this.addRibbonIcon("clock", "Unused Notes", () => {
           // Called when the user clicks the icon.
-          this.displayUnusedNotes(this.pluginData);
+          this.loadUnusedNotesData()
+            .then((pluginData) => {
+              this.pluginData = pluginData;
+              this.displayUnusedNotes(pluginData);
+            }
+          );
         });
 
         this.registerEvent(
@@ -357,9 +546,10 @@ class UnusedNotesTrackerPlugin extends Plugin {
   };
 
   loadUnusedNotesData() {
-    if (this.pluginData.unusedNotes) {
-      Promise.resolve(this.pluginData.unusedNotes);
-    }
+    // Don't load unusedNotes from memory - always load from file. This fixes sync issues from the phone
+    // if (this.pluginData.unusedNotes) {
+    //   Promise.resolve(this.pluginData.unusedNotes);
+    // }
 
     return this.loadData()
       .then((data) => {
@@ -415,12 +605,10 @@ class UnusedNotesTrackerPlugin extends Plugin {
       return;
     }
 
-    const now = new Date().toISOString();
-
     this.pluginData.unusedNotes[file.path] = {
       filename: file.path,
       ignored: false,
-      lastAccessed: now,
+      lastAccessed: "",
     };
 
     this.saveData(this.pluginData);
