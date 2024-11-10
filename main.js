@@ -98,7 +98,7 @@ class UnusedNotesModal extends Modal {
     return accessedToday;
   }
 
-  isThisWeek(date) {
+  isThisWeek(datetime) {
     const today = new Date();
 
     // Get the current day of the week (0 for Sunday, 6 for Saturday)
@@ -117,11 +117,15 @@ class UnusedNotesModal extends Modal {
     endOfWeek.setDate(startOfWeek.getDate() + 6); // Set to the next Sunday (end of the week)
     endOfWeek.setHours(23, 59, 59, 999);
 
-    // Adjust +2 hours for Sweden time
-    date.setHours(date.getHours() + 2);
+    // Adjust +1 hours for Sweden time
+    // datetime.setHours(datetime.getHours() + 1);
+
+    if (datetime.getFullYear() === 1970) {
+      return false;
+    }
 
     // Check if the date is within this range
-    return date >= startOfWeek && date <= endOfWeek;
+    return datetime >= startOfWeek && datetime <= endOfWeek;
   }
 
   getAccessedThisWeek(notes) {
@@ -240,26 +244,36 @@ class UnusedNotesModal extends Modal {
 
     let reviewGoalP = contentEl.createEl("p");
     reviewGoalP.classList.add("unused-notes-info-paragraph");
-    const reviewGoalText = "Review goals [need>done]. Weekly: " + this.settings.WEEKLY_REVIEW_COUNT 
+    const reviewGoalText = "Review goals [need>done]";
+    reviewGoalP.setText(reviewGoalText);
+
+    let reviewGoalValuesP = contentEl.createEl("p");
+    reviewGoalValuesP.classList.add("unused-notes-info-paragraph");
+      const reviewGoalValuesText = "Weekly: " + this.settings.WEEKLY_REVIEW_COUNT 
       + ">" + Object.values(accessedThisWeek).length + ". Daily: " 
       + Math.ceil(this.settings.WEEKLY_REVIEW_COUNT / 7) + ">" + Object.values(accessedToday).length;
-    reviewGoalP.setText(reviewGoalText);
+      reviewGoalValuesP.setText(reviewGoalValuesText);
+
     info.appendChild(reviewGoalP);
+    info.appendChild(reviewGoalValuesP);
 
     // Visual progress bars for better visualization
     let progressContainer1 = contentEl.createEl("div");
     progressContainer1.classList.add("unused-notes-goals-progress-container");
 
+    const progressWeeksAmount = (Object.values(accessedThisWeek).length / this.settings.WEEKLY_REVIEW_COUNT * 100) >= 100 ? 100 : (Object.values(accessedThisWeek).length / this.settings.WEEKLY_REVIEW_COUNT * 100);
+    const progressDaysAmount = (Object.values(accessedToday).length / Math.ceil(this.settings.WEEKLY_REVIEW_COUNT / 7) * 100) >= 100 ? 100 : (Object.values(accessedToday).length / Math.ceil(this.settings.WEEKLY_REVIEW_COUNT / 7) * 100);
+
     let progressBar1 = contentEl.createEl("div");
     progressBar1.classList.add("unused-notes-goals-progress-bar");
-    progressBar1.style.cssText = "width: " + Object.values(accessedThisWeek).length / this.settings.WEEKLY_REVIEW_COUNT * 100 + "%";
+    progressBar1.style.cssText = "width: " + progressWeeksAmount  + "%";
 
     let progressContainer2 = contentEl.createEl("div");
     progressContainer2.classList.add("unused-notes-goals-progress-container");
 
     let progressBar2 = contentEl.createEl("div");
     progressBar2.classList.add("unused-notes-goals-progress-bar");
-    progressBar2.style.cssText = "width: " + Object.values(accessedToday).length / Math.ceil(this.settings.WEEKLY_REVIEW_COUNT / 7) * 100 + "%";
+    progressBar2.style.cssText = "width: " + progressDaysAmount + "%";
 
     progressContainer1.appendChild(progressBar1);
     progressContainer2.appendChild(progressBar2);
